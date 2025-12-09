@@ -1,0 +1,31 @@
+sequenceDiagram
+	participant browser
+	participant server
+
+	browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/spa
+	activate server
+	server-->>browser: HTML document
+	deactivate server
+
+	Note right of browser: The HTML document contains no POST requests, just HTML and the javascript embed
+
+    browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/main.css
+    activate server
+    server-->>browser: The css file
+    deactivate server
+
+    browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/spa.js
+    activate server
+    server-->>browser: The Javascript file, but it's the single-page app version
+    deactivate server
+
+	Note right of browser: The Javascript for the SPA handles the requests for data as well as the DOM modification
+
+    browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/data.json
+    activate server
+    server-->>browser: [{"content": "test spa","date": "2025-12-08T09:21:16.682Z"},...]
+    deactivate server
+
+	Note right of server: After sending spa.js and the main HTML, the server only sends data, no rendered HTML
+
+	
