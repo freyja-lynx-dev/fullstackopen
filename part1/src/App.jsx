@@ -1,59 +1,64 @@
+// This represents Exercises 12, 13, and 14
 import { useState } from 'react'
-
-const Display = ({text}) => <div>{text}</div>
 
 const Button = ({onClick, text}) => <button onClick={onClick}>{text}</button>
 
-const StatisticsLine = ({value, text}) => <tr><td>{text}</td><td>{value}</td></tr>
+const Display = ({text}) => <div>{text}</div>
 
-
-const Statistics = ({good, neutral, bad}) => {
-  const average = () => {
-    return (good + (-1 * bad)) / (good + neutral + bad)
-  }
-
-  if (good + neutral + bad === 0) {
-    return (
-      <>
-        <p><b>No feedback yet!</b></p>
-      </>
-    )
-  }
-
+const Anecdote = ({text, votes}) => {
   return (
     <>
-      <h2>Statistics</h2>
-      <table>
-        <tbody>
-        <StatisticsLine text="good" value={good} />
-        <StatisticsLine text="neutral" value={neutral} />
-        <StatisticsLine text="bad" value={bad} />
-        <StatisticsLine text="average" value={average()} />
-        <StatisticsLine text='positive feedback ratio' value={good / (good + bad + neutral)} />
-        </tbody>
-      </table>
+    <Display text={text} />
+    <Display text={'Has ' + votes + ' votes'} />
     </>
   )
 }
 
-
 const App = () => {
-  const [good, setGood] = useState(0)
-  const [neutral, setNeutral] = useState(0)
-  const [bad, setBad] = useState(0)
+  const anecdotes = [
+    'If it hurts, do it more often.',
+    'Adding manpower to a late software project makes it later!',
+    'The first 90 percent of the code accounts for the first 90 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.',
+    'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.',
+    'Premature optimization is the root of all evil.',
+    'Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.',
+    'Programming without an extremely heavy use of console.log is same as if a doctor would refuse to use x-rays or blood tests when diagnosing patients.',
+    'The only way to go fast, is to go well.'
+  ]
+   
+  const [selected, setSelected] = useState(0)
+  const [votes, setVotes] = useState(Array(8).fill(0))
+  const [mostVoted, setMostVoted] = useState(0)
 
-  const goodFeedback = () => setGood(good + 1)
-  const neutralFeedback = () => setNeutral(neutral + 1)
-  const badFeedback = () => setBad(bad + 1)
+  const randomSelection = () => {
+    const next = Math.floor(Math.random() * 8)
+    console.log(next)
+    setSelected(next)
+  }
+
+  const addVote = () => {
+    const newVotes = [...votes]
+    newVotes[selected] += 1
+    setVotes(newVotes)
+
+    let newHigh = mostVoted
+    // logic for most voted
+    for (let i = 0; i < 8; i++) {
+      if (newVotes[i] > newVotes[newHigh]) {
+        newHigh = i
+      }
+    }
+    setMostVoted(newHigh)
+  }
 
   return (
     <div>
-      <h1>Feedback Form</h1>
-      <h2>Issue your rating</h2>
-      <Button onClick={goodFeedback} text='Rate Good' />
-      <Button onClick={neutralFeedback} text='Rate Neutral' />
-      <Button onClick={badFeedback} text='Rate Bad' />
-      <Statistics good={good} neutral={neutral} bad={bad} />
+      <h1>Anecdote of this moment</h1>
+      <Anecdote text={anecdotes[selected]} votes={votes[selected]} />
+      <Button onClick={randomSelection} text='Next anecdote' />
+      <Button onClick={addVote} text='Add vote' />
+      <h1>Most voted anecdote</h1>
+      <Anecdote text={anecdotes[mostVoted]} votes={votes[mostVoted]} />
     </div>
   )
 }
