@@ -38,6 +38,9 @@
             # Python is required on NixOS if the dependencies require node-gyp
 
             # pkgs.python3
+
+            # VScode LSPs
+            pkgs.nodePackages.vscode-langservers-extracted
           ];
         };
       });
