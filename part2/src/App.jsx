@@ -165,7 +165,7 @@ const App = () => {
       })
   },[])
 
-  const [persons, setPersons] = useState([]) 
+  const [persons, setPersons] = useState(null) 
   const [notification, setNotification] = useState(null)
   const [errorMessage, setErrorMessage] = useState(null)
 
@@ -232,16 +232,20 @@ const App = () => {
     }
   }
 
-  return (
-    <div>
-      <h1>Phonebook</h1>
-      <Notification message={notification} className="notif"/>
-      <Notification message={errorMessage} className="error"/>
-      <Persons persons={persons} callback={deleteEntry} />
-      <h3>Add a Person</h3>
-      <PersonEntryForm callback={addEntry} />
-    </div>
-  )
+  if (!persons) {
+    return null
+  } else {
+    return (
+      <div>
+        <h1>Phonebook</h1>
+        <Notification message={notification} className="notif"/>
+        <Notification message={errorMessage} className="error"/>
+        <Persons persons={persons} callback={deleteEntry} />
+        <h3>Add a Person</h3>
+        <PersonEntryForm callback={addEntry} />
+      </div>
+    )
+  }
 }
 
 export default App
