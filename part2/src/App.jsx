@@ -1,5 +1,6 @@
 import Course from './components/Course'
 import Note from './components/Note'
+import Notification from './components/Notification'
 import { useState, useEffect } from 'react'
 import personService from './services/persons'
 
@@ -114,7 +115,7 @@ const Persons = ({persons, callback}) => {
   <h3>People in the Phonebook</h3>
   <ul>
   {filtered.map((x) =>
-      <li key={x.name}>
+      <li className='person' key={x.name}>
         <Person name={x.name} number={x.number} />
         <button onClick={() => callback(x)}>delete</button>
       </li>
@@ -165,6 +166,15 @@ const App = () => {
   },[])
 
   const [persons, setPersons] = useState([]) 
+  const [notification, setNotification] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
+
+  const displayWith = (message, setter) => {
+    setter(message)
+    setTimeout(() => {
+      setter(null)
+    }, 5000)
+  }
 
   const updateEntry = (entry, newNumber) => {
     const updatedEntry = {...entry, number: newNumber }
@@ -173,11 +183,15 @@ const App = () => {
       .update(updatedEntry.id, updatedEntry)
       .then(returnedEntry => {
         setPersons(persons.map(person => person.id === entry.id ? returnedEntry : person))
+        displayWith(`Updated ${updatedEntry.name}'s number`, setNotification)
+      })
       .catch(error => {
-        alert(`trying to update a phonebook entry that does not exist!`)
+        displayWith(
+          `Person ${updatedEntry.name} was already removed from the server`,
+          setErrorMessage
+        )
         setPersons(persons.filter(n => n.id !== id))
       })
-    })
   }
 
   const addEntry = ({newName, newNumber}) => {
@@ -198,6 +212,7 @@ const App = () => {
         .then(returnedEntry => {
           setPersons(persons.concat(returnedEntry))
         })
+      displayWith(`${newName} has been added to the phonebook`, setNotification)
     } else {
       if (window.confirm(`${newName} is already in the phonebook! Would you like to update ${newName}'s number?'`)) {
         updateEntry(personAlreadyExists, newNumber)
@@ -213,12 +228,15 @@ const App = () => {
           console.log(removedEntry)
           setPersons(persons.filter(n => n.id !== removedEntry.id))
         })
+      displayWith(`Removed ${entry.name} from the phonebook`, setNotification)
     }
   }
 
   return (
     <div>
-      <h2>Phonebook</h2>
+      <h1>Phonebook</h1>
+      <Notification message={notification} className="notif"/>
+      <Notification message={errorMessage} className="error"/>
       <Persons persons={persons} callback={deleteEntry} />
       <h3>Add a Person</h3>
       <PersonEntryForm callback={addEntry} />
