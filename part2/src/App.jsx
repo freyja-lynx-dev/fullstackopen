@@ -1,7 +1,7 @@
 import Course from './components/Course'
 import Note from './components/Note'
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import personService from './services/persons'
 
 const CoursesApp = () => {
   const courses = [
@@ -102,7 +102,7 @@ const NotesApp = (props) => {
 
 const Person = ({name,number}) => (<>{name}, #{number}</>)
 
-const Persons = ({persons}) => {
+const Persons = ({persons, callback}) => {
   const [filter, setFilter] = useState('')
 
   const handleFilter = (event) => setFilter(event.target.value)
@@ -116,6 +116,7 @@ const Persons = ({persons}) => {
   {filtered.map((x) =>
       <li key={x.name}>
         <Person name={x.name} number={x.number} />
+        <button onClick={() => callback(x)}>delete</button>
       </li>
     )}
   </ul>
@@ -156,33 +157,69 @@ const PersonEntryForm = ({callback}) => {
 
 const App = () => {
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data)
+    personService
+      .getAll()
+      .then(notes => {
+        setPersons(notes)
       })
   },[])
+
   const [persons, setPersons] = useState([]) 
 
-  const addEntry = ({newName, newNumber}) => {
-    const entryObject = {
-      name: newName,
-      number: newNumber,
-    }
+  const updateEntry = (entry, newNumber) => {
+    const updatedEntry = {...entry, number: newNumber }
+    
+    personService
+      .update(updatedEntry.id, updatedEntry)
+      .then(returnedEntry => {
+        setPersons(persons.map(person => person.id === entry.id ? returnedEntry : person))
+      .catch(error => {
+        alert(`trying to update a phonebook entry that does not exist!`)
+        setPersons(persons.filter(n => n.id !== id))
+      })
+    })
+  }
 
+  const addEntry = ({newName, newNumber}) => {
     const isNotDuplicate = (person) => person.name !== newName
 
-    if (persons.every(isNotDuplicate)) {
-      setPersons(persons.concat([entryObject]))
+    const [personAlreadyExists] = persons.reduce(
+      (acc, x) => isNotDuplicate(x) ? acc : acc.concat(x),
+      [])
+
+    if (!personAlreadyExists) {
+      const entryObject = {
+        name: newName,
+        number: newNumber,
+      }
+
+      personService
+        .create(entryObject)
+        .then(returnedEntry => {
+          setPersons(persons.concat(returnedEntry))
+        })
     } else {
-      window.alert(`${newName} is already in the phonebook!`)
+      if (window.confirm(`${newName} is already in the phonebook! Would you like to update ${newName}'s number?'`)) {
+        updateEntry(personAlreadyExists, newNumber)
+      }
+    }
+  }
+
+  const deleteEntry = (entry) => {
+    if (window.confirm(`Are you sure you want to remove ${entry.name} from the phonebook?`)) {
+      personService
+        .remove(entry.id)
+        .then(removedEntry => {
+          console.log(removedEntry)
+          setPersons(persons.filter(n => n.id !== removedEntry.id))
+        })
     }
   }
 
   return (
     <div>
       <h2>Phonebook</h2>
-      <Persons persons={persons} />
+      <Persons persons={persons} callback={deleteEntry} />
       <h3>Add a Person</h3>
       <PersonEntryForm callback={addEntry} />
     </div>
